@@ -1,0 +1,33 @@
+- name: Create build directory
+  file:
+    state: directory
+    path: "{{ data_pipeline_build_dir }}"
+  tags:
+    - test
+
+- name: Run troposphere to generate template
+  data_pipeline:
+    data_pipeline: "{{ data_pipeline }}"
+  register: result
+  tags:
+    - test
+
+- debug: var=result
+  tags:
+    - test
+
+- name: Write template to file
+  copy:
+    content: "{{ result['Result'] }}"
+    dest: "{{ data_pipeline_build_dir }}/{{ data_pipeline_template_name }}-raw"
+
+- name: Clean up template
+  shell: "python -m json.tool {{ data_pipeline_build_dir }}/{{ data_pipeline_template_name }}-raw > {{ data_pipeline_build_dir }}/{{ data_pipeline_template_name }}"
+
+- name: Create CloudFormation stack
+  cloudformation:
+    stack_name: "{{ data_pipeline_stack_name }}"
+    region: "{{ data_pipeline_region | default('us-west-2') }}"
+    template: "{{ data_pipeline_build_dir}}/{{ data_pipeline_template_name }}"
+    security_token: "{{ ansible_security_token | default(omit,true) }}"
+    tags: "{{ data_pipeline_tags | default(omit,true) }}"

@@ -17,9 +17,14 @@ def build_pipeline_parameter_object(ansible_parameter_object):
         return parameter_object
 
 def build_pipeline(ansible_pipeline):
+    activate = False
+    if ansible_pipeline['Activate'] == None or ansible_pipeline['Activate'] == True:
+        activate = True
+
     pipeline = datapipeline.Pipeline(
         "datapipeline",
         Name="Pipeline",
+        Activate=activate,
         PipelineObjects=[build_pipeline_object(ansible_pipeline_object) for ansible_pipeline_object in ansible_pipeline['PipelineObjects']]
     )
 
